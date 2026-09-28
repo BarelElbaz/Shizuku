@@ -18,8 +18,8 @@ class AdbAutostartJobService : JobService() {
             return false
         }
 
-        AdbAutostart.start(this) {
-            jobFinished(params, false)
+        AdbAutostart.start(this) { success ->
+            jobFinished(params, !success)
         }
         return true
     }

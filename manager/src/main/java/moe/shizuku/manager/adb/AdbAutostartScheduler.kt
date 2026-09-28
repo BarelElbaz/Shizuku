@@ -24,7 +24,7 @@ object AdbAutostartScheduler {
         val component = ComponentName(context, AdbAutostartJobService::class.java)
         val wifi = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
 
         val periodic = JobInfo.Builder(JOB_ID_PERIODIC, component)
@@ -40,12 +40,12 @@ object AdbAutostartScheduler {
             .setBackoffCriteria(30_000L, JobInfo.BACKOFF_POLICY_EXPONENTIAL)
             .build()
 
-        val periodicResult = js.schedule(periodic)
-        val oneshotResult = js.schedule(oneshot)
-        Log.i(
-            AppConstants.TAG,
-            "AdbAutostartScheduler: scheduled periodic=$periodicResult oneshot=$oneshotResult"
-        )
+        // Rescheduling an existing id stops it if it's running, and this runs in the job's own process.
+        for (job in listOf(periodic, oneshot)) {
+            if (js.getPendingJob(job.id)?.requiredNetwork == job.requiredNetwork) continue
+            val result = js.schedule(job)
+            Log.i(AppConstants.TAG, "AdbAutostartScheduler: scheduled job ${job.id} result=$result")
+        }
     }
 
     fun cancel(context: Context) {

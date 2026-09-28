@@ -23,6 +23,7 @@ object WifiStateReceiver {
         val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
 
         cm.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
